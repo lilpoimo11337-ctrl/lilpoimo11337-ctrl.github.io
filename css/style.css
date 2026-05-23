@@ -1,0 +1,1089 @@
+@font-face {
+    font-family: "DiarySerif";
+    src: url("../шрифт.ttf") format("truetype");
+    font-display: swap;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: "DiarySerif", Georgia, "Times New Roman", serif;
+}
+
+body {
+    background: #0a0806 url("../assets/bg.png") center / cover no-repeat;
+    color: #1f1612;
+}
+
+#app {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 42% 58%;
+    grid-template-rows: 1fr;
+    align-items: center;
+    position: relative;
+}
+
+#app:not(.is-reading) {
+    grid-template-columns: 36% 64%;
+    justify-items: stretch;
+}
+
+#homeScreen {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    align-self: center;
+    padding: 4vh 1vw 4vh 4vw;
+    z-index: 10;
+    transition: opacity 0.35s ease;
+}
+
+.home-menu {
+    width: min(100%, 400px);
+    margin: 0 0 0 auto;
+}
+
+.home-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: clamp(16px, 2.2vh, 28px);
+    width: 100%;
+}
+
+.home-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: clamp(64px, 8vh, 82px);
+    padding: 18px 32px;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: clamp(24px, 2.5vw, 34px);
+    font-weight: bold;
+    color: #2b1f1d;
+    background: url("../assets/bg-button.png") center / 100% 100% no-repeat;
+    transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.home-btn--main {
+    width: 100%;
+}
+
+.home-btn:hover:not(:disabled) {
+    transform: scale(1.03);
+    filter: brightness(1.06);
+}
+
+.home-btn:active:not(:disabled) {
+    transform: scale(1.01);
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.home-btn:disabled {
+    opacity: 0.5;
+    cursor: wait;
+}
+
+/* ========== Одна книга на главной ========== */
+.book-stage {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    min-height: 0;
+    padding: 3vh 5vw 3vh 2vw;
+    z-index: 15;
+}
+
+#app.is-reading .book-stage {
+    grid-column: 1 / -1;
+    z-index: 100;
+}
+
+#app.is-reading #homeScreen {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+#mainBook {
+    position: relative;
+}
+
+/* Закладка «Домой» — у открытой книги, слева у корешка */
+.book-home-bookmark {
+    position: absolute;
+    left: 1.5%;
+    top: 10.5%;
+    z-index: 350;
+    width: 75px;
+    height: 80px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+    background: url("../assets/Home_bookmark.png") center / cover no-repeat;
+    transform: translateX(-56%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity 0.35s ease,
+        visibility 0.35s ease,
+        top 0.12s ease,
+        transform 0.12s ease;
+}
+
+#mainBook.is-open.is-pages-visible .book-home-bookmark {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+#mainBook.is-open .book-home-bookmark:hover,
+#mainBook.is-open .book-home-bookmark:focus-visible {
+    top: calc(10.5% - 8px);
+    transform: translateX(-56%) scale(1.03);
+    outline: none;
+}
+
+/* Закладка «Историческая справка» — справа (значок dictionary.png) */
+.book-dictionary-bookmark {
+    position: absolute;
+    right: 1.5%;
+    left: auto;
+    top: 10.5%;
+    z-index: 350;
+    width: 75px;
+    height: 80px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+    background: url("../assets/dictionary.png") center / contain no-repeat;
+    transform: translateX(56%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity 0.35s ease,
+        visibility 0.35s ease,
+        top 0.12s ease,
+        transform 0.12s ease;
+}
+
+#mainBook.is-open.is-pages-visible .book-dictionary-bookmark {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+#mainBook.is-open .book-dictionary-bookmark:hover,
+#mainBook.is-open .book-dictionary-bookmark:focus-visible {
+    top: calc(10.5% - 8px);
+    transform: translateX(56%) scale(1.03);
+    outline: none;
+}
+
+#app.is-dictionary-open .book-dictionary-bookmark {
+    filter: brightness(1.08);
+}
+
+/* ========== Словарь (листок справа) ========== */
+.dictionary-panel {
+    display: none;
+    position: fixed;
+    top: 50%;
+    right: 0;
+    z-index: 125;
+    width: min(34vw, 440px);
+    height: min(86vh, 800px);
+    pointer-events: none;
+    visibility: hidden;
+    opacity: 0;
+    transform: translate(108%, -50%);
+    transition:
+        transform 0.5s cubic-bezier(0.35, 0.1, 0.2, 1),
+        opacity 0.4s ease,
+        visibility 0.4s ease;
+}
+
+#app.is-reading .dictionary-panel {
+    display: block;
+}
+
+#app.is-dictionary-open .dictionary-panel {
+    pointer-events: auto;
+    visibility: visible;
+    opacity: 1;
+    transform: translate(-2.5vw, -50%);
+}
+
+.dictionary-sheet {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 36px 28px 28px;
+    box-sizing: border-box;
+    background: url("../assets/page_t.png") center / 100% 100% no-repeat;
+    filter: drop-shadow(0 18px 36px rgba(0, 0, 0, 0.45));
+}
+
+.dictionary-sheet__close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    width: 36px;
+    height: 36px;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: 28px;
+    line-height: 1;
+    color: #5c3d2e;
+    background: transparent;
+}
+
+.dictionary-sheet__close:hover {
+    color: #8a1c14;
+}
+
+.dictionary-sheet__title {
+    margin: 0 0 16px;
+    text-align: center;
+    font-size: clamp(22px, 2.2vw, 28px);
+    font-weight: bold;
+    color: #8a1c14;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dictionary-sheet__body {
+    height: calc(100% - 52px);
+    overflow-y: auto;
+    padding: 4px 8px 8px;
+    color: #2b1f1d;
+}
+
+.dictionary-sheet__hint {
+    margin: 0;
+    font-size: clamp(15px, 1.45vw, 18px);
+    line-height: 1.55;
+    text-align: justify;
+    font-style: italic;
+    color: #554433;
+}
+
+.historical-notes {
+    margin: 0;
+}
+
+.historical-note {
+    margin: 0 0 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed rgba(139, 90, 43, 0.35);
+    font-size: clamp(14px, 1.4vw, 17px);
+    line-height: 1.55;
+    text-align: justify;
+    color: #2b1f1d;
+}
+
+.historical-note:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.dictionary-list {
+    margin: 0;
+}
+
+.dictionary-entry {
+    margin: 0 0 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed rgba(139, 90, 43, 0.35);
+}
+
+.dictionary-entry:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.dictionary-list dt {
+    margin: 0 0 6px;
+    font-size: clamp(16px, 1.55vw, 19px);
+    font-weight: bold;
+    color: #8a1c14;
+}
+
+.dictionary-list dd {
+    margin: 0;
+    font-size: clamp(14px, 1.4vw, 17px);
+    line-height: 1.55;
+    text-align: justify;
+    color: #2b1f1d;
+}
+
+/* Слова, которые есть в словаре на этом развороте */
+.dict-word {
+    border-bottom: 1px dotted rgba(138, 28, 20, 0.65);
+    cursor: help;
+}
+
+#app.is-reading .dict-word {
+    user-select: text;
+}
+
+#app:not(.is-reading) #mainBook {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    transform: none !important;
+    z-index: auto;
+    width: min(58vw, 780px) !important;
+    height: min(88vh, 960px) !important;
+    max-height: 92vh !important;
+    aspect-ratio: auto !important;
+    margin: 0 auto;
+    filter: drop-shadow(0 28px 48px rgba(0, 0, 0, 0.55));
+    transition: none !important;
+}
+
+#app:not(.is-reading) .book-closed-view {
+    display: flex !important;
+    opacity: 1;
+    visibility: visible;
+}
+
+#app:not(.is-reading) .book-opening-view {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* При возврате на главную — без «вспышки» открытого разворота */
+#app:not(.is-reading) .book-open-view {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transition: none !important;
+}
+
+#app:not(.is-reading) .book-closed-view {
+    transition: none !important;
+}
+
+/* Закрытая — лежащая обложка */
+.book-closed-view {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.55s ease, visibility 0.55s ease;
+}
+
+.book-closed-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 22px 36px rgba(0, 0, 0, 0.55));
+    transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.book-cover-title {
+    position: absolute;
+    left: 50%;
+    top: 44%;
+    transform: translate(-50%, -50%);
+    width: 82%;
+    margin: 0;
+    text-align: center;
+    font-size: clamp(28px, 3.8vw, 48px);
+    line-height: 1.12;
+    color: #ffdf6d;
+    text-shadow: 4px 4px 0 #000, 0 0 18px rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+}
+
+#app:not(.is-reading) .book-cover-title {
+    font-size: clamp(32px, 4.8vw, 58px);
+}
+
+#app:not(.is-reading) .book-closed-img {
+    object-fit: contain;
+    object-position: center center;
+}
+
+/* Старый 3D-слой обложки не используется */
+.book-opening-view {
+    display: none !important;
+}
+
+/* Текст в книге появляется после открытия */
+#mainBook.is-open.is-pages-visible:not(.is-text-visible) .spread-text,
+#mainBook.is-open.is-pages-visible:not(.is-text-visible) .spread-media {
+    opacity: 0;
+}
+
+#mainBook.is-text-visible .spread-text,
+#mainBook.is-text-visible .spread-media {
+    opacity: 1;
+    transition: opacity 0.32s ease;
+}
+
+.book-open-view {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 6;
+    transition: none;
+}
+
+#mainBook.is-opening.is-open .book-open-view,
+#mainBook.is-open .book-open-view {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.55s ease 0.06s, visibility 0.55s ease 0.06s;
+}
+
+#mainBook.is-open.is-pages-visible .book-open-view {
+    pointer-events: auto;
+}
+
+.book-frame {
+    width: 100%;
+    height: 100%;
+    background: url("../assets/book-bg1.png") center / contain no-repeat;
+    padding: 0;
+    position: relative;
+}
+
+.book-interior {
+    position: absolute;
+    /* окно пергамента на book-bg1.png (1428×996) */
+    top: 0.6%;
+    left: 0.15%;
+    right: 0.15%;
+    bottom: 1.2%;
+    width: auto;
+    height: auto;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Переход: закрытая книга → открытый разворот (без переворота страниц) */
+#mainBook.is-opening:not(.is-open) .book-closed-view {
+    opacity: 1;
+    visibility: visible;
+}
+
+#mainBook.is-opening.is-open .book-closed-view,
+#mainBook.is-open .book-closed-view {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+#mainBook.is-opening,
+#mainBook.is-open {
+    position: fixed !important;
+    margin: 0 !important;
+    z-index: 120;
+    transform: translate(-50%, -50%);
+    filter: drop-shadow(0 28px 48px rgba(0, 0, 0, 0.55));
+}
+
+#mainBook.is-opening,
+#mainBook.is-open.is-opening,
+#mainBook.is-opening.is-open {
+    transition:
+        left 0.95s cubic-bezier(0.35, 0.1, 0.2, 1),
+        top 0.95s cubic-bezier(0.35, 0.1, 0.2, 1),
+        width 0.95s cubic-bezier(0.35, 0.1, 0.2, 1),
+        height 0.95s cubic-bezier(0.35, 0.1, 0.2, 1);
+}
+
+#app.is-reading #mainBook.is-open.is-pages-visible {
+    transition:
+        left 0.5s cubic-bezier(0.35, 0.1, 0.2, 1),
+        top 0.5s cubic-bezier(0.35, 0.1, 0.2, 1),
+        transform 0.5s cubic-bezier(0.35, 0.1, 0.2, 1);
+}
+
+#app.is-reading.is-dictionary-open #mainBook.is-open.is-pages-visible {
+    left: 36%;
+}
+
+/* Старт — ровно там, где книга на главной */
+#mainBook.is-opening {
+    left: var(--book-origin-x, 75%);
+    top: var(--book-origin-y, 50%);
+    width: var(--book-origin-w, min(58vw, 780px));
+    height: var(--book-origin-h, min(88vh, 960px));
+    aspect-ratio: auto;
+}
+
+/* Финиш — открытая книга по центру */
+#mainBook.is-opening.is-open,
+#mainBook.is-open {
+    left: 50%;
+    top: 50%;
+    aspect-ratio: 1428 / 996;
+    width: min(98vw, calc(94vh * 1428 / 996), 1480px);
+    height: min(94vh, calc(98vw * 996 / 1428), calc(1480px * 996 / 1428));
+}
+
+#mainBook.is-open .book-frame {
+    background-size: contain;
+    background-position: center center;
+}
+
+/* ========== PageFlip ========== */
+#pageFlipHost.stf__parent {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    margin: 0;
+}
+
+.stf__parent .stf__wrapper {
+    margin: 0;
+}
+
+.stf__parent .stf__item {
+    box-shadow: none;
+}
+
+.stf__parent .stf__block {
+    overflow: hidden;
+}
+
+.stf__item.page {
+    overflow: hidden;
+}
+
+.stf__item.page .page-content {
+    box-sizing: border-box;
+}
+
+.page-content {
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Текстуры страниц под макет открытой книги (корешок слева / справа) */
+.page-content.texture-left {
+    background-image: url("../assets/book_hl.png");
+    background-position: left center;
+}
+
+.page-content.texture-right {
+    background-image: url("../assets/book_hl2.png");
+    background-position: right center;
+}
+
+.page-spread-left .page-content,
+.page-spread-right .page-content {
+    overflow: hidden;
+}
+
+/* Текст — только левая страница разворота */
+.spread-text {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    /* отступ от корешка справа, от обреза слева */
+    padding: 7% 11% 7% 15%;
+    color: #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    box-sizing: border-box;
+}
+
+.spread-text--dense h2 {
+    margin-bottom: 10px;
+    font-size: clamp(17px, 1.85vw, 22px);
+    padding-bottom: 8px;
+}
+
+.spread-text--dense p,
+.spread-text--dense li {
+    font-size: clamp(14px, 1.35vw, 17px);
+    line-height: 1.52;
+    margin-bottom: 10px;
+}
+
+.spread-text--dense .diary-lead {
+    font-size: clamp(15px, 1.45vw, 18px) !important;
+}
+
+.spread-text h2 {
+    margin: 0 0 16px;
+    font-size: clamp(20px, 2.1vw, 26px);
+    font-weight: bold;
+    color: #000;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    line-height: 1.25;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+    padding-bottom: 10px;
+}
+
+.spread-text .page-body,
+.spread-text-body {
+    width: 100%;
+}
+
+.spread-text--with-art {
+    overflow: hidden;
+}
+
+.spread-text--with-art .spread-text-body {
+    flex: 0 1 auto;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.spread-text-art {
+    flex: 0 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.spread-text p,
+.spread-text li {
+    font-size: clamp(16px, 1.55vw, 20px);
+    line-height: 1.65;
+    text-align: justify;
+    text-justify: inter-word;
+    hyphens: auto;
+    margin: 0 0 14px;
+    color: #000;
+}
+
+.spread-text strong {
+    color: #000;
+    font-weight: bold;
+}
+
+.diary-lead {
+    font-weight: bold;
+    font-size: clamp(17px, 1.65vw, 21px) !important;
+}
+
+/* Красные буквицы в начале абзацев дневника */
+.spread-text-body > p:not(.diary-lead):not(.page-end-hint)::first-letter {
+    float: left;
+    font-family: "DiarySerif", Georgia, "Times New Roman", serif;
+    font-size: clamp(2.75em, 4.5vw, 3.65em);
+    line-height: 0.76;
+    font-weight: 700;
+    color: #9a1818;
+    padding: 0.02em 0.1em 0 0;
+    margin: 0.08em 0.08em 0 0;
+}
+
+.spread-text--dense .spread-text-body > p:not(.diary-lead):not(.page-end-hint)::first-letter {
+    font-size: clamp(2.35em, 3.8vw, 3em);
+}
+
+.diary-list {
+    margin: 0;
+    padding-left: 22px;
+}
+
+.diary-list li {
+    margin-bottom: 12px;
+}
+
+/* Иллюстрация — правая страница и/или свободное место слева под текстом */
+.spread-media {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: 6% 16% 8% 14%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.page-spread-right .spread-media {
+    padding: 6% 17% 8% 15%;
+}
+
+.page-spread-left .spread-text-art {
+    padding: 0 10% 0 2%;
+    box-sizing: border-box;
+}
+
+.page-spread-left .spread-text-art .spread-figures {
+    width: 100%;
+    align-items: center;
+}
+
+.spread-media--quiet {
+    visibility: hidden;
+}
+
+.spread-figures {
+    width: 100%;
+    height: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    box-sizing: border-box;
+}
+
+.spread-figures--solo .spread-figure {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
+    max-height: 100%;
+}
+
+.spread-figures--solo .spread-figure img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: min(74vh, 560px);
+}
+
+.spread-figures--hero .spread-figure img {
+    max-height: min(80vh, 640px);
+}
+
+.spread-figures--hero .spread-figure {
+    flex: 1 1 auto;
+    justify-content: center;
+}
+
+.spread-figures--hero-large .spread-figure img {
+    max-height: min(88vh, 780px);
+    max-width: 100%;
+}
+
+.spread-media:has(.spread-figures--hero-large) {
+    padding: 5% 17% 6% 15%;
+}
+
+.spread-figures--duo .spread-figure {
+    flex: 1 1 0;
+    width: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.spread-figures--duo .spread-figure img {
+    max-width: 100%;
+    max-height: min(44vh, 360px);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.spread-figures--duo .spread-figure figcaption {
+    flex-shrink: 0;
+    margin-top: 6px;
+    font-size: clamp(11px, 1.1vw, 14px);
+    line-height: 1.4;
+}
+
+.spread-figures--inline {
+    height: 100%;
+    width: 100%;
+}
+
+.spread-figures--inline .spread-figure {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
+}
+
+.spread-figures--inline .spread-figure img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: min(34vh, 300px);
+}
+
+.spread-figures--inline-solo .spread-figure img {
+    max-height: min(46vh, 380px);
+}
+
+.spread-figures--inline-solo .spread-figure {
+    justify-content: flex-start;
+}
+
+.spread-figure {
+    margin: 0;
+    width: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.spread-figure img {
+    display: block;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    object-fit: contain;
+    border: 1px solid rgba(139, 90, 43, 0.35);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.spread-figure figcaption {
+    font-size: clamp(12px, 1.2vw, 15px);
+    font-style: normal;
+    font-weight: 600;
+    text-align: center;
+    color: #2b1f1d;
+    line-height: 1.45;
+    max-width: 98%;
+    padding: 0 4px;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.spread-figure--empty {
+    min-height: 140px;
+    border: 2px dashed rgba(139, 90, 43, 0.4);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.spread-figure-placeholder {
+    font-size: 14px;
+    color: #665544;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+.page-end-hint {
+    text-align: center;
+    font-style: italic;
+    color: #000;
+    font-size: clamp(14px, 1.3vw, 16px);
+    margin-top: 14px;
+    opacity: 0.75;
+}
+
+/* Во время перелистывания не «выплывает» контент соседней страницы */
+.stf__parent[data-state="flipping"] .spread-text,
+.stf__parent[data-state="flipping"] .spread-media {
+    pointer-events: none;
+}
+
+/* Стрелками листаем разворот, а не текст по буквам */
+#app.is-reading .spread-text,
+#app.is-reading .spread-media,
+#app.is-reading .page-body {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ========== Читалка UI ========== */
+#readerScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    pointer-events: none;
+}
+
+.reader-chrome {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+#readerScreen.is-active .reader-chrome {
+    opacity: 1;
+    pointer-events: none;
+}
+
+.reader-nav {
+    position: absolute;
+    bottom: 10px;
+    z-index: 300;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 10px;
+    pointer-events: auto;
+}
+
+.reader-nav img {
+    height: 42px;
+}
+
+.reader-nav--prev {
+    left: 6px;
+    transform: scaleX(-1);
+}
+
+.reader-nav--next {
+    right: 6px;
+}
+
+@media (max-width: 800px) {
+    #app {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
+    }
+
+    #homeScreen {
+        grid-row: 2;
+        grid-column: 1;
+        align-items: center;
+        justify-content: center;
+        padding: 3vh 10vw 5vh;
+    }
+
+    .home-menu {
+        margin: 0 auto;
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .home-actions {
+        gap: 14px;
+    }
+
+    .home-btn {
+        min-height: 58px;
+        font-size: 26px;
+    }
+
+    .book-stage {
+        grid-row: 1;
+        grid-column: 1;
+        align-items: center;
+        justify-content: center;
+        padding: 4vh 5vw 2vh;
+    }
+
+    #app:not(.is-reading) #mainBook {
+        transform: none !important;
+    }
+
+    #mainBook,
+    #app:not(.is-reading) #mainBook {
+        width: min(92vw, 520px);
+        height: min(56vh, 460px);
+        margin-right: 0;
+    }
+
+    #app:not(.is-reading) .book-cover-title {
+        font-size: clamp(22px, 6vw, 36px);
+    }
+
+    #mainBook.is-open {
+        width: min(98vw, calc(88vh * 1428 / 996));
+        height: min(88vh, calc(98vw * 996 / 1428));
+    }
+
+    #app.is-reading.is-dictionary-open #mainBook.is-open.is-pages-visible {
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.94);
+    }
+
+    .dictionary-panel {
+        width: min(88vw, 360px);
+        height: min(52vh, 420px);
+        transform: translate(100%, -54%);
+    }
+
+    #app.is-dictionary-open .dictionary-panel {
+        transform: translate(-4vw, -54%);
+    }
+
+    #mainBook.is-open .book-interior {
+        top: 1.5%;
+        left: 0.5%;
+        right: 0.5%;
+        bottom: 2%;
+    }
+
+    .spread-text {
+        padding: 6% 9% 6% 12%;
+    }
+
+    .spread-media {
+        padding: 6% 15% 10% 13%;
+    }
+
+    .page-spread-right .spread-media {
+        padding: 6% 16% 10% 14%;
+    }
+
+    .page-spread-left .spread-text-art {
+        padding: 0 12% 0 3%;
+    }
+
+    .spread-text p,
+    .spread-text li {
+        font-size: 15px;
+    }
+
+    .reader-nav {
+        display: block;
+    }
+}
+
+@media (min-width: 801px) {
+    .reader-nav {
+        display: none;
+    }
+}
