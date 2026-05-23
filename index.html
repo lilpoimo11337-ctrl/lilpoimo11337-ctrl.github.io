@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дневник Ивана Грозного</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <section id="homeScreen" class="screen">
+            <nav class="home-menu" aria-label="Главное меню">
+                <div class="home-actions">
+                    <button type="button" class="home-btn home-btn--main" id="btnRead">Читать</button>
+                </div>
+            </nav>
+        </section>
+
+        <div class="book-stage" id="bookStage">
+            <aside id="dictionaryPanel" class="dictionary-panel" aria-hidden="true">
+                <div class="dictionary-sheet">
+                    <button
+                        type="button"
+                        class="dictionary-sheet__close"
+                        id="btnDictionaryClose"
+                        aria-label="Закрыть историческую справку"
+                    >×</button>
+                    <h2 class="dictionary-sheet__title">Историческая справка</h2>
+                    <div class="dictionary-sheet__body" id="dictionaryContent">
+                        <p class="dictionary-sheet__hint">
+                            Откройте справку на развороте — здесь появится текст по теме страницы.
+                        </p>
+                    </div>
+                </div>
+            </aside>
+
+            <div id="mainBook" aria-label="Дневник Ивана Грозного">
+                <div class="book-closed-view" id="bookClosedView">
+                    <img
+                        class="book-closed-img"
+                        src="assets/book-cover1.png"
+                        alt="Обложка дневника"
+                        width="560"
+                        height="380"
+                    >
+                    <h1 class="book-cover-title">Дневник<br>Ивана Грозного</h1>
+                </div>
+
+                <div class="book-opening-view" id="bookOpeningView" aria-hidden="true">
+                    <div class="book-opening-cover-stage">
+                        <div class="book-cover-leaf" id="bookCoverLeaf">
+                            <div class="cover-face cover-face--front">
+                                <img
+                                    class="cover-face__img"
+                                    src="assets/book-cover.png"
+                                    alt=""
+                                    width="480"
+                                    height="720"
+                                >
+                                <h1 class="cover-face__title">Дневник<br>Ивана Грозного</h1>
+                            </div>
+                            <div class="cover-face cover-face--back" id="coverBackFace"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="book-open-view" id="bookOpenView">
+                    <div class="book-frame">
+                        <div class="book-interior" id="bookInterior">
+                            <div id="pageFlipHost"></div>
+                        </div>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    class="book-home-bookmark"
+                    id="btnBack"
+                    title="Закрыть дневник"
+                    aria-label="На главную"
+                ></button>
+                <button
+                    type="button"
+                    class="book-dictionary-bookmark"
+                    id="btnDictionary"
+                    title="Историческая справка"
+                    aria-label="Историческая справка"
+                ></button>
+            </div>
+        </div>
+
+        <section id="readerScreen" class="screen screen--hidden">
+            <div class="reader-chrome">
+                <button type="button" class="reader-nav reader-nav--prev" id="btnPrev" title="Разворот назад">
+                    <img src="assets/arrow.svg" alt="">
+                </button>
+                <button type="button" class="reader-nav reader-nav--next" id="btnNext" title="Разворот вперёд">
+                    <img src="assets/arrow.svg" alt="">
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <script src="js/cookies.js"></script>
+    <script src="js/quest-data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
